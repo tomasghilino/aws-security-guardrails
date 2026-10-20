@@ -12,3 +12,8 @@ variable "monthly_budget_usd" {
   type    = number
   default = 20
 }
+
+variable "allowed_regions" {
+  type    = list(string)
+  default = ["us-east-1"]
+}
