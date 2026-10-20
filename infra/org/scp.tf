@@ -73,3 +73,40 @@ resource "aws_organizations_policy_attachment" "region_deny" {
   policy_id = aws_organizations_policy.region_deny.id
   target_id = local.root_id
 }
+
+# one policy that grows with each guarded service: a target takes at most five scps, FullAWSAccess included
+data "aws_iam_policy_document" "baseline" {
+  statement {
+    sid       = "DenyLeavingOrganization"
+    effect    = "Deny"
+    actions   = ["organizations:LeaveOrganization"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "DenyRootUser"
+    effect    = "Deny"
+    actions   = ["*"]
+    resources = ["*"]
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:root"]
+    }
+  }
+}
+
+resource "aws_organizations_policy" "baseline" {
+  name        = "sgr-baseline"
+  description = "guardrails every member account gets"
+  type        = "SERVICE_CONTROL_POLICY"
+  content     = data.aws_iam_policy_document.baseline.json
+
+  depends_on = [aws_organizations_organization.this]
+}
+
+resource "aws_organizations_policy_attachment" "baseline" {
+  policy_id = aws_organizations_policy.baseline.id
+  target_id = local.root_id
+}
