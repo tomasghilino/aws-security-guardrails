@@ -5,3 +5,7 @@ output "log_bucket" {
 output "trail_arn" {
   value = aws_cloudtrail.organization.arn
 }
+
+output "config_bucket" {
+  value = aws_s3_bucket.config.bucket
+}

@@ -1,0 +1,38 @@
+locals {
+  config_bucket = "sgr-config-${local.account_ids["security"]}"
+}
+
+module "config_management" {
+  source    = "../modules/config-recorder"
+  providers = { aws = aws.management }
+
+  bucket_name = local.config_bucket
+}
+
+module "config_security" {
+  source    = "../modules/config-recorder"
+  providers = { aws = aws.security }
+
+  bucket_name = local.config_bucket
+}
+
+module "config_segp" {
+  source    = "../modules/config-recorder"
+  providers = { aws = aws.segp }
+
+  bucket_name = local.config_bucket
+}
+
+module "config_jsp" {
+  source    = "../modules/config-recorder"
+  providers = { aws = aws.jsp }
+
+  bucket_name = local.config_bucket
+}
+
+# aws creates this role in member accounts, but not in the management account when a delegated admin deploys rules
+resource "aws_iam_service_linked_role" "config_multiaccount_management" {
+  provider = aws.management
+
+  aws_service_name = "config-multiaccountsetup.amazonaws.com"
+}
