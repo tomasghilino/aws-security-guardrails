@@ -95,6 +95,65 @@ data "aws_iam_policy_document" "baseline" {
       values   = ["arn:aws:iam::*:root"]
     }
   }
+
+  # the organization trail lives in the management account, which scps never reach; this covers every other trail
+  statement {
+    sid    = "ProtectCloudTrail"
+    effect = "Deny"
+    actions = [
+      "cloudtrail:DeleteTrail",
+      "cloudtrail:PutEventSelectors",
+      "cloudtrail:PutInsightSelectors",
+      "cloudtrail:StopLogging",
+      "cloudtrail:UpdateTrail",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "ProtectLogArchive"
+    effect = "Deny"
+    actions = [
+      "s3:DeleteBucket",
+      "s3:DeleteBucketPolicy",
+      "s3:PutBucketOwnershipControls",
+      "s3:PutBucketPolicy",
+      "s3:PutBucketPublicAccessBlock",
+      "s3:PutBucketVersioning",
+      "s3:PutEncryptionConfiguration",
+      "s3:PutLifecycleConfiguration",
+    ]
+    resources = ["arn:aws:s3:::sgr-logs-*"]
+
+    condition {
+      test     = "ArnNotLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:role/OrganizationAccountAccessRole"]
+    }
+  }
+
+  statement {
+    sid    = "ProtectLogKey"
+    effect = "Deny"
+    actions = [
+      "kms:DisableKey",
+      "kms:PutKeyPolicy",
+      "kms:ScheduleKeyDeletion",
+    ]
+    resources = ["*"]
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:ResourceAliases"
+      values   = ["alias/sgr-logs"]
+    }
+
+    condition {
+      test     = "ArnNotLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:role/OrganizationAccountAccessRole"]
+    }
+  }
 }
 
 resource "aws_organizations_policy" "baseline" {
