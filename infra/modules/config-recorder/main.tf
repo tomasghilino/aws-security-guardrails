@@ -18,6 +18,7 @@ resource "aws_iam_service_linked_role" "config" {
 }
 
 resource "aws_config_configuration_recorder" "this" {
+  #checkov:skip=CKV2_AWS_48:records everything except AWS::Config::ResourceCompliance, left out on purpose (see below)
   name     = "sgr"
   role_arn = aws_iam_service_linked_role.config.arn
 
@@ -47,6 +48,7 @@ resource "aws_config_delivery_channel" "this" {
 }
 
 resource "aws_config_configuration_recorder_status" "this" {
+  #checkov:skip=CKV2_AWS_45:the recorder covers every type except AWS::Config::ResourceCompliance, left out on purpose
   name       = aws_config_configuration_recorder.this.name
   is_enabled = true
 

@@ -20,6 +20,7 @@ resource "aws_iam_role_policy_attachment" "config_aggregator" {
 }
 
 resource "aws_config_configuration_aggregator" "organization" {
+  #checkov:skip=CKV_AWS_121:the region deny scp leaves us-east-1 as the only region anything can run in
   name = "sgr-organization"
 
   organization_aggregation_source {
