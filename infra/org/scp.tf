@@ -123,7 +123,29 @@ data "aws_iam_policy_document" "baseline" {
       "s3:PutEncryptionConfiguration",
       "s3:PutLifecycleConfiguration",
     ]
-    resources = ["arn:aws:s3:::sgr-logs-*"]
+    resources = ["arn:aws:s3:::sgr-config-*", "arn:aws:s3:::sgr-logs-*"]
+
+    condition {
+      test     = "ArnNotLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:role/OrganizationAccountAccessRole"]
+    }
+  }
+
+  # terraform reaches member accounts through the organization role, so only that role may change the recorders
+  statement {
+    sid    = "ProtectConfig"
+    effect = "Deny"
+    actions = [
+      "config:DeleteConfigurationAggregator",
+      "config:DeleteConfigurationRecorder",
+      "config:DeleteDeliveryChannel",
+      "config:DeleteOrganizationConfigRule",
+      "config:PutConfigurationRecorder",
+      "config:PutDeliveryChannel",
+      "config:StopConfigurationRecorder",
+    ]
+    resources = ["*"]
 
     condition {
       test     = "ArnNotLike"
