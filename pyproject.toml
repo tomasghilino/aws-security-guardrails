@@ -1,11 +1,11 @@
 [tool.pytest.ini_options]
-pythonpath = ["scripts"]
+pythonpath = ["scripts", "lambdas"]
 testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
 target-version = "py310"
-src = ["scripts"]
+src = ["scripts", "lambdas"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S"]
