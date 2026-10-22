@@ -155,6 +155,28 @@ data "aws_iam_policy_document" "baseline" {
   }
 
   statement {
+    sid    = "ProtectSecurityServices"
+    effect = "Deny"
+    actions = [
+      "access-analyzer:DeleteAnalyzer",
+      "guardduty:DeleteDetector",
+      "guardduty:DisassociateFromAdministratorAccount",
+      "guardduty:DisassociateFromMasterAccount",
+      "guardduty:UpdateDetector",
+      "securityhub:DisableSecurityHub",
+      "securityhub:DisassociateFromAdministratorAccount",
+      "securityhub:DisassociateFromMasterAccount",
+    ]
+    resources = ["*"]
+
+    condition {
+      test     = "ArnNotLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:role/OrganizationAccountAccessRole"]
+    }
+  }
+
+  statement {
     sid    = "ProtectLogKey"
     effect = "Deny"
     actions = [
