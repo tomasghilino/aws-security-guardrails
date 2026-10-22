@@ -1,6 +1,7 @@
 # security hub and guardduty pick their delegated admin through their own apis, and both need to be on
 # in the management account first; from then on the security account configures every account
 resource "aws_guardduty_detector" "management" {
+  #checkov:skip=CKV2_AWS_3:the organization configuration lives with the delegated admin in infra/security
   enable = true
 }
 
