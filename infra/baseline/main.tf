@@ -30,9 +30,15 @@ module "config_jsp" {
   bucket_name = local.config_bucket
 }
 
-# aws creates this role in member accounts, but not in the management account when a delegated admin deploys rules
+# aws creates these roles in member accounts, but not in the management account when a delegated admin deploys to the organization
 resource "aws_iam_service_linked_role" "config_multiaccount_management" {
   provider = aws.management
 
   aws_service_name = "config-multiaccountsetup.amazonaws.com"
+}
+
+resource "aws_iam_service_linked_role" "access_analyzer_management" {
+  provider = aws.management
+
+  aws_service_name = "access-analyzer.amazonaws.com"
 }

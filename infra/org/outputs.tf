@@ -9,3 +9,7 @@ output "account_ids" {
 output "organizational_unit_ids" {
   value = { for name, ou in aws_organizations_organizational_unit.this : name => ou.id }
 }
+
+output "root_id" {
+  value = local.root_id
+}
