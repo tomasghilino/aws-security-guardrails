@@ -42,15 +42,27 @@ resource "aws_iam_role_policy" "forwarder" {
   policy = data.aws_iam_policy_document.put_events.json
 }
 
-# root sign-ins and iam calls only show up on the bus of the account where they happen
+# api calls only show up on the bus of the account where they happen, so the ones the security
+# account alerts on or remediates are sent there
 resource "aws_cloudwatch_event_rule" "forward" {
   name        = "sgr-forward-to-security"
-  description = "sends sign-in and iam events to the security account"
+  description = "sends sign-ins and the api calls the security account watches to its event bus"
   event_pattern = jsonencode({
-    source        = ["aws.signin", "aws.iam"]
+    source        = ["aws.cloudtrail", "aws.ec2", "aws.iam", "aws.s3", "aws.signin"]
     "detail-type" = ["AWS Console Sign In via CloudTrail", "AWS API Call via CloudTrail"]
     detail = {
-      eventName = ["ConsoleLogin", "CreateAccessKey"]
+      eventName = [
+        "AuthorizeSecurityGroupIngress",
+        "ConsoleLogin",
+        "CreateAccessKey",
+        "DeleteAccountPublicAccessBlock",
+        "DeleteBucketPublicAccessBlock",
+        "PutAccountPublicAccessBlock",
+        "PutBucketAcl",
+        "PutBucketPolicy",
+        "PutBucketPublicAccessBlock",
+        "StopLogging",
+      ]
     }
   })
 }

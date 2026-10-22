@@ -90,3 +90,32 @@ module "forwarder_jsp" {
 
   target_bus_arn = local.security_bus_arn
 }
+
+module "remediation_management" {
+  source    = "../modules/remediation-roles"
+  providers = { aws = aws.management }
+
+  security_account_id    = local.account_ids["security"]
+  organization_trail_arn = "arn:aws:cloudtrail:${var.region}:${data.aws_organizations_organization.lookup.master_account_id}:trail/sgr-org-trail"
+}
+
+module "remediation_security" {
+  source    = "../modules/remediation-roles"
+  providers = { aws = aws.security }
+
+  security_account_id = local.account_ids["security"]
+}
+
+module "remediation_segp" {
+  source    = "../modules/remediation-roles"
+  providers = { aws = aws.segp }
+
+  security_account_id = local.account_ids["security"]
+}
+
+module "remediation_jsp" {
+  source    = "../modules/remediation-roles"
+  providers = { aws = aws.jsp }
+
+  security_account_id = local.account_ids["security"]
+}
