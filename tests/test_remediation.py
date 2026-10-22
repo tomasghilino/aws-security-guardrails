@@ -143,3 +143,22 @@ def test_a_running_trail_is_left_alone(notified):
 
     assert remediate_cloudtrail.handler(cloudtrail_event("StopLogging", name="org-trail"), None) == {"restarted": False}
     assert notified == []
+
+
+def test_a_member_copy_of_the_event_reaches_the_account_that_owns_the_trail(notified, monkeypatch):
+    reached = []
+    monkeypatch.setattr(
+        remediate_cloudtrail,
+        "account_session",
+        lambda account, role: reached.append(account) or boto3.Session(region_name="us-east-1"),
+    )
+    cloudtrail = boto3.client("cloudtrail", region_name="us-east-1")
+    trail(cloudtrail, boto3.client("s3", region_name="us-east-1"))
+    cloudtrail.stop_logging(Name="org-trail")
+    event = cloudtrail_event("StopLogging", name=f"arn:aws:cloudtrail:us-east-1:{ACCOUNT}:trail/org-trail")
+    event["detail"]["recipientAccountId"] = "222222222222"
+
+    result = remediate_cloudtrail.handler(event, None)
+
+    assert reached == [ACCOUNT]
+    assert result == {"restarted": True}

@@ -5,12 +5,21 @@ import os
 from common import account_session, notify, seconds_since
 
 
+def trail_home(detail):
+    trail = detail["requestParameters"]["name"]
+    if trail.startswith("arn:"):
+        _, _, _, region, account, _ = trail.split(":", 5)
+        return trail, account, region
+    return trail, detail["recipientAccountId"], detail["awsRegion"]
+
+
 def handler(event, context):
     detail = event["detail"]
-    account = detail["recipientAccountId"]
-    trail = detail["requestParameters"]["name"]
+    # every member account also records the stop of an organization trail, so the trail arn, not the
+    # account that reported the event, says where the trail lives
+    trail, account, region = trail_home(detail)
     session = account_session(account, os.environ["REMEDIATION_ROLE"])
-    cloudtrail = session.client("cloudtrail", region_name=detail["awsRegion"])
+    cloudtrail = session.client("cloudtrail", region_name=region)
 
     if cloudtrail.get_trail_status(Name=trail)["IsLogging"]:
         return {"restarted": False}
