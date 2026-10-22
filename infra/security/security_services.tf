@@ -24,6 +24,26 @@ locals {
     RUNTIME_MONITORING = ["ECS_FARGATE_AGENT_MANAGEMENT", "EC2_AGENT_MANAGEMENT", "EKS_ADDON_MANAGEMENT"]
   }
 
+  # accepted risks: controls for services this organization deliberately doesn't run, each with its reason
+  securityhub_disabled_controls = {
+    "CloudTrail.5" = "alerts come from eventbridge rules, not from cloudwatch logs metric filters"
+    "GuardDuty.5"  = "paid protection plan left off on purpose: no eks clusters run here"
+    "GuardDuty.6"  = "paid protection plan left off on purpose: lambda network logs not needed"
+    "GuardDuty.7"  = "paid protection plan left off on purpose: no eks clusters run here"
+    "GuardDuty.8"  = "paid protection plan left off on purpose: no ec2 workloads run here"
+    "GuardDuty.9"  = "paid protection plan left off on purpose: no rds databases run here"
+    "GuardDuty.10" = "paid protection plan left off on purpose: s3 data events would dominate the bill"
+    "GuardDuty.11" = "paid protection plan left off on purpose: no compute workloads run here"
+    "GuardDuty.12" = "paid protection plan left off on purpose: no ecs workloads run here"
+    "GuardDuty.13" = "paid protection plan left off on purpose: no ec2 workloads run here"
+    "Inspector.1"  = "inspector left out of scope: images are scanned with trivy in ci"
+    "Inspector.2"  = "inspector left out of scope: images are scanned with trivy in ci"
+    "Inspector.3"  = "inspector left out of scope: lambda code is scanned in ci"
+    "Inspector.4"  = "inspector left out of scope: lambda dependencies are scanned in ci"
+    "Macie.1"      = "no sensitive customer data is stored in this organization"
+    "Macie.2"      = "no sensitive customer data is stored in this organization"
+  }
+
   securityhub_standards = [
     "arn:aws:securityhub:${var.region}::standards/aws-foundational-security-best-practices/v/1.0.0",
     "arn:aws:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/3.0.0",
@@ -107,7 +127,7 @@ resource "aws_securityhub_configuration_policy" "baseline" {
     enabled_standard_arns = local.securityhub_standards
 
     security_controls_configuration {
-      disabled_control_identifiers = []
+      disabled_control_identifiers = sort(keys(local.securityhub_disabled_controls))
     }
   }
 
@@ -122,4 +142,25 @@ resource "aws_securityhub_configuration_policy_association" "root" {
 resource "aws_accessanalyzer_analyzer" "organization" {
   analyzer_name = "sgr-organization"
   type          = "ORGANIZATION"
+}
+
+# expected external access: sso roles trust the identity center saml provider, and the project 2 ci role trusts github oidc
+resource "aws_accessanalyzer_archive_rule" "sso_roles" {
+  analyzer_name = aws_accessanalyzer_analyzer.organization.analyzer_name
+  rule_name     = "sso-permission-set-roles"
+
+  filter {
+    criteria = "resource"
+    contains = ["role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_"]
+  }
+}
+
+resource "aws_accessanalyzer_archive_rule" "github_oidc_role" {
+  analyzer_name = aws_accessanalyzer_analyzer.organization.analyzer_name
+  rule_name     = "github-oidc-ci-role"
+
+  filter {
+    criteria = "resource"
+    contains = ["role/segp-github-ci"]
+  }
 }
