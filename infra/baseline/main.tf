@@ -42,3 +42,26 @@ resource "aws_iam_service_linked_role" "access_analyzer_management" {
 
   aws_service_name = "access-analyzer.amazonaws.com"
 }
+
+module "hardening_management" {
+  source    = "../modules/account-hardening"
+  providers = { aws = aws.management }
+}
+
+module "hardening_security" {
+  source    = "../modules/account-hardening"
+  providers = { aws = aws.security }
+}
+
+module "hardening_segp" {
+  source    = "../modules/account-hardening"
+  providers = { aws = aws.segp }
+
+  # project 2's shared stack already owns this setting in segp
+  manage_ebs_default_encryption = false
+}
+
+module "hardening_jsp" {
+  source    = "../modules/account-hardening"
+  providers = { aws = aws.jsp }
+}
