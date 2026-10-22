@@ -213,7 +213,7 @@ resource "aws_cloudwatch_event_target" "alert" {
   arn  = aws_sns_topic.alerts.arn
 
   input_transformer {
-    input_paths    = jsondecode(each.value.paths)
+    input_paths = jsondecode(each.value.paths)
     # jsonencode would escape the angle brackets and eventbridge would no longer see the placeholders
     input_template = "\"${each.value.message}\""
   }
