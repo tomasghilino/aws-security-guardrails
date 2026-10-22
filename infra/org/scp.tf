@@ -176,6 +176,40 @@ data "aws_iam_policy_document" "baseline" {
     }
   }
 
+  # an intruder's first move after getting in is muting the alarms
+  statement {
+    sid    = "ProtectAlerting"
+    effect = "Deny"
+    actions = [
+      "events:DeleteRule",
+      "events:DisableRule",
+      "events:PutRule",
+      "events:PutTargets",
+      "events:RemovePermission",
+      "events:RemoveTargets",
+      "iam:DeleteRole",
+      "iam:DeleteRolePolicy",
+      "iam:PutRolePolicy",
+      "iam:UpdateAssumeRolePolicy",
+      "sns:DeleteTopic",
+      "sns:RemovePermission",
+      "sns:SetTopicAttributes",
+      "sns:Unsubscribe",
+    ]
+    resources = [
+      "arn:aws:events:*:*:event-bus/default",
+      "arn:aws:events:*:*:rule/sgr-*",
+      "arn:aws:iam::*:role/sgr-event-forwarder",
+      "arn:aws:sns:*:*:sgr-*",
+    ]
+
+    condition {
+      test     = "ArnNotLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:role/OrganizationAccountAccessRole"]
+    }
+  }
+
   statement {
     sid    = "ProtectLogKey"
     effect = "Deny"
