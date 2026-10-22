@@ -176,9 +176,9 @@ data "aws_iam_policy_document" "baseline" {
     }
   }
 
-  # an intruder's first move after getting in is muting the alarms
+  # an intruder's first move after getting in is muting the alarms and the automatic fixes
   statement {
-    sid    = "ProtectAlerting"
+    sid    = "ProtectAlertingAndRemediation"
     effect = "Deny"
     actions = [
       "events:DeleteRule",
@@ -187,10 +187,16 @@ data "aws_iam_policy_document" "baseline" {
       "events:PutTargets",
       "events:RemovePermission",
       "events:RemoveTargets",
+      "iam:AttachRolePolicy",
       "iam:DeleteRole",
       "iam:DeleteRolePolicy",
       "iam:PutRolePolicy",
       "iam:UpdateAssumeRolePolicy",
+      "lambda:DeleteFunction",
+      "lambda:PutFunctionConcurrency",
+      "lambda:RemovePermission",
+      "lambda:UpdateFunctionCode",
+      "lambda:UpdateFunctionConfiguration",
       "sns:DeleteTopic",
       "sns:RemovePermission",
       "sns:SetTopicAttributes",
@@ -200,6 +206,9 @@ data "aws_iam_policy_document" "baseline" {
       "arn:aws:events:*:*:event-bus/default",
       "arn:aws:events:*:*:rule/sgr-*",
       "arn:aws:iam::*:role/sgr-event-forwarder",
+      "arn:aws:iam::*:role/sgr-lambda-remediate-*",
+      "arn:aws:iam::*:role/sgr-remediate-*",
+      "arn:aws:lambda:*:*:function:sgr-*",
       "arn:aws:sns:*:*:sgr-*",
     ]
 
