@@ -65,3 +65,28 @@ module "hardening_jsp" {
   source    = "../modules/account-hardening"
   providers = { aws = aws.jsp }
 }
+
+locals {
+  security_bus_arn = "arn:aws:events:${var.region}:${local.account_ids["security"]}:event-bus/default"
+}
+
+module "forwarder_management" {
+  source    = "../modules/event-forwarder"
+  providers = { aws = aws.management }
+
+  target_bus_arn = local.security_bus_arn
+}
+
+module "forwarder_segp" {
+  source    = "../modules/event-forwarder"
+  providers = { aws = aws.segp }
+
+  target_bus_arn = local.security_bus_arn
+}
+
+module "forwarder_jsp" {
+  source    = "../modules/event-forwarder"
+  providers = { aws = aws.jsp }
+
+  target_bus_arn = local.security_bus_arn
+}
