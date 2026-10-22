@@ -40,3 +40,13 @@ resource "aws_ebs_encryption_by_default" "this" {
 
   enabled = true
 }
+
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+# security hub SSM.7: ssm documents can't be shared publicly from this account
+resource "aws_ssm_service_setting" "document_public_sharing" {
+  setting_id    = "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/documents/console/public-sharing-permission"
+  setting_value = "Disable"
+}

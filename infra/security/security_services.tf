@@ -78,6 +78,20 @@ resource "aws_guardduty_organization_configuration" "this" {
   auto_enable_organization_members = "ALL"
 }
 
+# auto-enable only reached new accounts, so the existing ones are enrolled explicitly
+resource "aws_guardduty_member" "existing" {
+  for_each = toset(["management", "segp-workloads", "jsp-workloads"])
+
+  detector_id = aws_guardduty_detector.security.id
+  account_id  = each.key == "management" ? data.aws_organizations_organization.lookup.master_account_id : data.terraform_remote_state.org.outputs.account_ids[each.key]
+  email       = data.terraform_remote_state.org.outputs.account_emails[each.key]
+
+  lifecycle {
+    # aws reports organization members as invited even though nobody was sent an invitation
+    ignore_changes = [email, invite]
+  }
+}
+
 resource "aws_guardduty_organization_configuration_feature" "paid" {
   for_each = toset(local.guardduty_paid_features)
 

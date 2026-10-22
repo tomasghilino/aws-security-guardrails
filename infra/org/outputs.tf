@@ -13,3 +13,9 @@ output "organizational_unit_ids" {
 output "root_id" {
   value = local.root_id
 }
+
+# guardduty needs each member's email to enroll it explicitly
+output "account_emails" {
+  value     = merge({ for name, account in aws_organizations_account.member : name => account.email }, { management = data.aws_organizations_organization.current.master_account_email })
+  sensitive = true
+}
