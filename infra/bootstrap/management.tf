@@ -386,3 +386,12 @@ resource "aws_iam_role_policy" "terraform_plan_chain" {
   role   = module.plan_role_management.name
   policy = data.aws_iam_policy_document.terraform_plan_chain.json
 }
+
+resource "aws_iam_role_policy_attachment" "teardown" {
+  #checkov:skip=CKV_AWS_274:only while var.teardown is true, for the final destroy run by a person
+  count    = var.teardown ? 1 : 0
+  provider = aws.management
+
+  role       = aws_iam_role.terraform.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}

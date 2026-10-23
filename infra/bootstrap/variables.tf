@@ -13,3 +13,9 @@ variable "github_subject_prefix" {
   type    = string
   default = "repo:tomasghilino@86894891/aws-security-guardrails@1427339997"
 }
+
+# true gives sgr-terraform administrator access back for the final destroy, which deletes what its own policy can't
+variable "teardown" {
+  type    = bool
+  default = false
+}

@@ -13,3 +13,9 @@ variable "member_role" {
   type    = string
   default = "OrganizationAccountAccessRole"
 }
+
+# false turns security hub off in every member account through the central policy, the first step of the teardown
+variable "securityhub_enabled" {
+  type    = bool
+  default = true
+}

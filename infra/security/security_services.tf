@@ -137,7 +137,7 @@ resource "aws_securityhub_configuration_policy" "baseline" {
   description = "fsbp, cis 3.0 and nist 800-53 rev5 in every account"
 
   configuration_policy {
-    service_enabled       = true
+    service_enabled       = var.securityhub_enabled
     enabled_standard_arns = local.securityhub_standards
 
     security_controls_configuration {
