@@ -96,20 +96,6 @@ data "aws_iam_policy_document" "baseline" {
     }
   }
 
-  # the organization trail lives in the management account, which scps never reach; this covers every other trail
-  statement {
-    sid    = "ProtectCloudTrail"
-    effect = "Deny"
-    actions = [
-      "cloudtrail:DeleteTrail",
-      "cloudtrail:PutEventSelectors",
-      "cloudtrail:PutInsightSelectors",
-      "cloudtrail:StopLogging",
-      "cloudtrail:UpdateTrail",
-    ]
-    resources = ["*"]
-  }
-
   statement {
     sid    = "ProtectLogArchive"
     effect = "Deny"

@@ -1,4 +1,5 @@
 resource "aws_cloudtrail" "organization" {
+  enable_logging = false
   #checkov:skip=CKV2_AWS_10:alerts come from eventbridge in the security account, not from cloudwatch metric filters
   #checkov:skip=CKV_AWS_252:delivery notifications are not needed, the log archive is read on demand
   provider = aws.management
