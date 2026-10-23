@@ -13,6 +13,12 @@ variable "target_bus_arn" {
   type = string
 }
 
+# set in the management account, where the pipeline may only create roles that carry this boundary
+variable "permissions_boundary" {
+  type    = string
+  default = null
+}
+
 data "aws_iam_policy_document" "trust" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -32,8 +38,9 @@ data "aws_iam_policy_document" "put_events" {
 }
 
 resource "aws_iam_role" "forwarder" {
-  name               = "sgr-event-forwarder"
-  assume_role_policy = data.aws_iam_policy_document.trust.json
+  name                 = "sgr-event-forwarder"
+  assume_role_policy   = data.aws_iam_policy_document.trust.json
+  permissions_boundary = var.permissions_boundary
 }
 
 resource "aws_iam_role_policy" "forwarder" {

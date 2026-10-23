@@ -19,6 +19,12 @@ variable "organization_trail_arn" {
   default = null
 }
 
+# set in the management account, where the pipeline may only create roles that carry this boundary
+variable "permissions_boundary" {
+  type    = string
+  default = null
+}
+
 data "aws_iam_policy_document" "permissions" {
   for_each = local.remediations
 
@@ -68,6 +74,8 @@ resource "aws_iam_role" "this" {
 
   name               = "sgr-remediate-${each.key}"
   assume_role_policy = data.aws_iam_policy_document.trust[each.key].json
+
+  permissions_boundary = var.permissions_boundary
 }
 
 resource "aws_iam_role_policy" "this" {

@@ -3,6 +3,9 @@
 Runs with security account credentials and reaches the other accounts through
 sgr-terraform in the management account, then OrganizationAccountAccessRole.
 Without --apply it only reports what it would delete.
+
+Already run once. sgr-terraform has since lost its ec2 delete rights in the management
+account, so a rerun only cleans the member accounts there.
 """
 
 import argparse

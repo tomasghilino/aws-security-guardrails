@@ -2,10 +2,10 @@ name: terraform
 
 on:
   pull_request:
-    paths: [infra/**, lambdas/**, policy/**, .github/scripts/**, .github/workflows/terraform.yml]
+    paths: [infra/**, lambdas/**, policy/**, scripts/validate_policies.py, requirements-ci.txt, .github/scripts/**, .github/workflows/terraform.yml]
   push:
     branches: [dev]
-    paths: [infra/**, lambdas/**, policy/**, .github/scripts/**, .github/workflows/terraform.yml]
+    paths: [infra/**, lambdas/**, policy/**, scripts/validate_policies.py, requirements-ci.txt, .github/scripts/**, .github/workflows/terraform.yml]
   # drift check: a change made outside terraform fails the run
   schedule:
     - cron: "17 10 * * *"
@@ -58,6 +58,12 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           mask-aws-account-id: true
       - run: .github/scripts/mask-accounts.sh
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - run: pip install -r requirements-ci.txt
       - run: .github/scripts/terraform.sh plan ${{ matrix.stack }}
 
   # the environment waits for a reviewer, and only dev may deploy to it
@@ -85,5 +91,11 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           mask-aws-account-id: true
       - run: .github/scripts/mask-accounts.sh
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - run: pip install -r requirements-ci.txt
       # in dependency order: security reads the org outputs, baseline needs the config bucket from logging
       - run: .github/scripts/terraform.sh apply org logging baseline security

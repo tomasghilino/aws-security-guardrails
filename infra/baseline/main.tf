@@ -1,5 +1,7 @@
 locals {
-  config_bucket = "sgr-config-${local.account_ids["security"]}"
+  # created in the bootstrap stack, next to the management role it limits
+  pipeline_boundary = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:policy/sgr-pipeline-boundary"
+  config_bucket     = "sgr-config-${local.account_ids["security"]}"
 }
 
 module "config_management" {
@@ -74,7 +76,8 @@ module "forwarder_management" {
   source    = "../modules/event-forwarder"
   providers = { aws = aws.management }
 
-  target_bus_arn = local.security_bus_arn
+  target_bus_arn       = local.security_bus_arn
+  permissions_boundary = local.pipeline_boundary
 }
 
 module "forwarder_segp" {
@@ -97,6 +100,7 @@ module "remediation_management" {
 
   security_account_id    = local.account_ids["security"]
   organization_trail_arn = "arn:aws:cloudtrail:${var.region}:${data.aws_organizations_organization.lookup.master_account_id}:trail/sgr-org-trail"
+  permissions_boundary   = local.pipeline_boundary
 }
 
 module "remediation_security" {
@@ -120,23 +124,27 @@ module "remediation_jsp" {
   security_account_id = local.account_ids["security"]
 }
 
+locals {
+  management_plan_role = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/sgr-terraform-plan"
+}
+
 module "plan_role_security" {
   source    = "../modules/plan-role"
   providers = { aws = aws.security }
 
-  management_account_id = data.aws_organizations_organization.lookup.master_account_id
+  trusted_role_arns = [local.management_plan_role]
 }
 
 module "plan_role_segp" {
   source    = "../modules/plan-role"
   providers = { aws = aws.segp }
 
-  management_account_id = data.aws_organizations_organization.lookup.master_account_id
+  trusted_role_arns = [local.management_plan_role]
 }
 
 module "plan_role_jsp" {
   source    = "../modules/plan-role"
   providers = { aws = aws.jsp }
 
-  management_account_id = data.aws_organizations_organization.lookup.master_account_id
+  trusted_role_arns = [local.management_plan_role]
 }

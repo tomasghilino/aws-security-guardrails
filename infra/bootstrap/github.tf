@@ -84,7 +84,14 @@ data "aws_iam_policy_document" "github_plan" {
   statement {
     sid       = "ChainToManagement"
     actions   = ["sts:AssumeRole"]
-    resources = [aws_iam_role.terraform_plan.arn]
+    resources = [module.plan_role_management.arn]
+  }
+
+  # access analyzer checks every iam, resource and scp policy in the plan before it can be applied
+  statement {
+    sid       = "ValidatePolicies"
+    actions   = ["access-analyzer:ValidatePolicy"]
+    resources = ["*"]
   }
 }
 

@@ -1,0 +1,2 @@
+# what the terraform pipeline needs on the runner, for scripts/validate_policies.py
+boto3==1.43.115

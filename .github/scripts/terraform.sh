@@ -29,6 +29,7 @@ plan() {
   tf show -json ci.tfplan >"infra/$stack/plan.json"
   docker run --rm --network none -v "$PWD:/work" -w /work "$CONFTEST_IMAGE" \
     test --no-color --policy policy "infra/$stack/plan.json"
+  python scripts/validate_policies.py "infra/$stack/plan.json"
 
   summary=$(tf show -no-color ci.tfplan | grep -E '^(Plan:|No changes)' || true)
   echo "| $stack | ${summary:-no changes} |" >>"$GITHUB_STEP_SUMMARY"
