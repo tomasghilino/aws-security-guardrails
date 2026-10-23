@@ -52,7 +52,6 @@ data "aws_iam_policy_document" "no_data_reads" {
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer",
       "kinesis:GetRecords",
-      "kms:Decrypt",
       "logs:FilterLogEvents",
       "logs:GetLogEvents",
       "logs:StartQuery",
@@ -66,6 +65,20 @@ data "aws_iam_policy_document" "no_data_reads" {
       "ssm:GetParametersByPath",
     ]
     resources = ["*"]
+  }
+
+  # lambda decrypts its environment variables with the caller's rights; without this a plan sees them empty and reports drift
+  statement {
+    sid       = "DenyDecryptOutsideLambda"
+    effect    = "Deny"
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringNotLike"
+      variable = "kms:ViaService"
+      values   = ["lambda.*.amazonaws.com"]
+    }
   }
 }
 
