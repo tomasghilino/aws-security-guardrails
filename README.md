@@ -2,6 +2,8 @@
 
 Guardrails for a four-account AWS Organization: the management account, a security account that runs every security service for the rest, and two workload accounts from my earlier projects. Service control policies stop the worst mistakes before they happen, CloudTrail, Config, Security Hub, GuardDuty and Access Analyzer see what gets through, and Lambda functions fix three kinds of problems in seconds and email me about the rest. All of it is Terraform, deployed by GitHub Actions without stored keys, and every control below was triggered on purpose at least once.
 
+![Architecture overview: GitHub Actions reaches the security account through OIDC; inside the organization the trail writes to the log archive, forwarders in the management and workload accounts send API calls to the security event bus, which starts the remediation Lambdas, whose fix-only roles reach the workload accounts, and sends alerts through SNS to email](docs/images/architecture-overview.jpg)
+
 ## Stack
 
 - AWS Organizations: SCPs, delegated administration, Identity Center
