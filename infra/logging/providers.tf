@@ -37,7 +37,7 @@ provider "aws" {
   region = var.region
 
   assume_role {
-    role_arn     = "arn:aws:iam::${local.management_id}:role/sgr-terraform"
+    role_arn     = "arn:aws:iam::${local.management_id}:role/${var.management_role}"
     session_name = "terraform-logging"
   }
 
@@ -51,12 +51,12 @@ provider "aws" {
   region = var.region
 
   assume_role {
-    role_arn     = "arn:aws:iam::${local.management_id}:role/sgr-terraform"
+    role_arn     = "arn:aws:iam::${local.management_id}:role/${var.management_role}"
     session_name = "terraform-logging"
   }
 
   assume_role {
-    role_arn     = "arn:aws:iam::${local.security_id}:role/OrganizationAccountAccessRole"
+    role_arn     = "arn:aws:iam::${local.security_id}:role/${var.member_role}"
     session_name = "terraform-logging"
   }
 

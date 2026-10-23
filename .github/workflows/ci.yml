@@ -53,6 +53,7 @@ jobs:
       TERRAFORM_IMAGE: hashicorp/terraform:1.16.5@sha256:c7926feace05d0f7e73542842bf3945924e955a1f782cf000ccbb8d18fa42d77
       TFLINT_IMAGE: ghcr.io/terraform-linters/tflint:v0.64.0@sha256:1c595f42d794c32c45a6ea8b58655fd66433d4ca3b1bc631c574a48d120bd19f
       CHECKOV_IMAGE: bridgecrew/checkov:3.3.28@sha256:19ab1e9a08bf76f78391ca6fa46bb62fd08737e4e66466b16a82aa2d1337e153
+      CONFTEST_IMAGE: openpolicyagent/conftest:v0.71.1@sha256:0e77cdf7c1fcde035f3c579e4aaa6664ee2a8be5777eaa9af9f520cdd02280c0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -80,3 +81,8 @@ jobs:
         run: >-
           docker run --rm --network none -v "$PWD:/work" -w /work "$CHECKOV_IMAGE"
           -d infra --framework terraform --quiet --compact --skip-download
+      # the unit tests of the plan policies; the policies themselves run on real plans in terraform.yml
+      - name: conftest
+        run: >-
+          docker run --rm --network none -v "$PWD:/work" -w /work "$CONFTEST_IMAGE"
+          verify --no-color --policy policy

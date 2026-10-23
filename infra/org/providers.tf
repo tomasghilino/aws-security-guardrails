@@ -26,7 +26,7 @@ provider "aws" {
   region = var.region
 
   assume_role {
-    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/sgr-terraform"
+    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/${var.management_role}"
     session_name = "terraform-org"
   }
 

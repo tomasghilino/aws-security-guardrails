@@ -9,3 +9,7 @@ output "state_kms_key_alias" {
 output "management_role_name" {
   value = aws_iam_role.terraform.name
 }
+
+output "github_role_names" {
+  value = { for k, role in aws_iam_role.github : k => role.name }
+}

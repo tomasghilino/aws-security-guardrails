@@ -27,7 +27,7 @@ provider "aws" {
   region = var.region
 
   assume_role {
-    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/sgr-terraform"
+    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/${var.management_role}"
     session_name = "terraform-baseline"
   }
 
@@ -50,12 +50,12 @@ provider "aws" {
   region = var.region
 
   assume_role {
-    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/sgr-terraform"
+    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/${var.management_role}"
     session_name = "terraform-baseline"
   }
 
   assume_role {
-    role_arn     = "arn:aws:iam::${local.account_ids["security"]}:role/OrganizationAccountAccessRole"
+    role_arn     = "arn:aws:iam::${local.account_ids["security"]}:role/${var.member_role}"
     session_name = "terraform-baseline"
   }
 
@@ -69,12 +69,12 @@ provider "aws" {
   region = var.region
 
   assume_role {
-    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/sgr-terraform"
+    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/${var.management_role}"
     session_name = "terraform-baseline"
   }
 
   assume_role {
-    role_arn     = "arn:aws:iam::${local.account_ids["segp-workloads"]}:role/OrganizationAccountAccessRole"
+    role_arn     = "arn:aws:iam::${local.account_ids["segp-workloads"]}:role/${var.member_role}"
     session_name = "terraform-baseline"
   }
 
@@ -88,12 +88,12 @@ provider "aws" {
   region = var.region
 
   assume_role {
-    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/sgr-terraform"
+    role_arn     = "arn:aws:iam::${data.aws_organizations_organization.lookup.master_account_id}:role/${var.management_role}"
     session_name = "terraform-baseline"
   }
 
   assume_role {
-    role_arn     = "arn:aws:iam::${local.account_ids["jsp-workloads"]}:role/OrganizationAccountAccessRole"
+    role_arn     = "arn:aws:iam::${local.account_ids["jsp-workloads"]}:role/${var.member_role}"
     session_name = "terraform-baseline"
   }
 

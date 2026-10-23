@@ -2,6 +2,7 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
+plan.json
 crash.log
 
 __pycache__/

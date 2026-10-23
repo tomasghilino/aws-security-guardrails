@@ -1,0 +1,89 @@
+name: terraform
+
+on:
+  pull_request:
+    paths: [infra/**, lambdas/**, policy/**, .github/scripts/**, .github/workflows/terraform.yml]
+  push:
+    branches: [dev]
+    paths: [infra/**, lambdas/**, policy/**, .github/scripts/**, .github/workflows/terraform.yml]
+  # drift check: a change made outside terraform fails the run
+  schedule:
+    - cron: "17 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # none of these publish signatures, so they are pinned by digest
+  TERRAFORM_IMAGE: hashicorp/terraform:1.16.5@sha256:c7926feace05d0f7e73542842bf3945924e955a1f782cf000ccbb8d18fa42d77
+  CONFTEST_IMAGE: openpolicyagent/conftest:v0.71.1@sha256:0e77cdf7c1fcde035f3c579e4aaa6664ee2a8be5777eaa9af9f520cdd02280c0
+  AWS_REGION: us-east-1
+  TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
+
+jobs:
+  # bootstrap is left out on purpose: it holds the pipeline's own roles and only a person applies it
+  plan:
+    # pull requests from forks get no oidc token and no secrets, so they are not planned
+    if: >-
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: terraform-plan-${{ github.ref }}-${{ matrix.stack }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [org, logging, baseline, security]
+    env:
+      # the read-only chain: sgr-github-plan, then sgr-terraform-plan in management and in each member account
+      TF_VAR_management_role: sgr-terraform-plan
+      TF_VAR_member_role: sgr-terraform-plan
+      FAIL_ON_CHANGES: ${{ github.event_name != 'pull_request' }}
+      ROLE_ID: ${{ secrets.AWS_PLAN_ROLE_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          # a secret, not a variable: step inputs are printed in the log and the arn holds the account id
+          role-to-assume: ${{ secrets.AWS_PLAN_ROLE_ARN }}
+          role-session-name: plan-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+      - run: .github/scripts/mask-accounts.sh
+      - run: .github/scripts/terraform.sh plan ${{ matrix.stack }}
+
+  # the environment waits for a reviewer, and only dev may deploy to it
+  apply:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: terraform-apply
+      cancel-in-progress: false
+    env:
+      ROLE_ID: ${{ secrets.AWS_APPLY_ROLE_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_APPLY_ROLE_ARN }}
+          role-session-name: apply-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+      - run: .github/scripts/mask-accounts.sh
+      # in dependency order: security reads the org outputs, baseline needs the config bucket from logging
+      - run: .github/scripts/terraform.sh apply org logging baseline security

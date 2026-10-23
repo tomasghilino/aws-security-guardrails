@@ -7,3 +7,9 @@ variable "region" {
 variable "management_profile" {
   type = string
 }
+
+# immutable subject: owner and repository ids are part of it, so a renamed or recreated repository gets no access
+variable "github_subject_prefix" {
+  type    = string
+  default = "repo:tomasghilino@86894891/aws-security-guardrails@1427339997"
+}

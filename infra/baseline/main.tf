@@ -119,3 +119,24 @@ module "remediation_jsp" {
 
   security_account_id = local.account_ids["security"]
 }
+
+module "plan_role_security" {
+  source    = "../modules/plan-role"
+  providers = { aws = aws.security }
+
+  management_account_id = data.aws_organizations_organization.lookup.master_account_id
+}
+
+module "plan_role_segp" {
+  source    = "../modules/plan-role"
+  providers = { aws = aws.segp }
+
+  management_account_id = data.aws_organizations_organization.lookup.master_account_id
+}
+
+module "plan_role_jsp" {
+  source    = "../modules/plan-role"
+  providers = { aws = aws.jsp }
+
+  management_account_id = data.aws_organizations_organization.lookup.master_account_id
+}
