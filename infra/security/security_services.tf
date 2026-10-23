@@ -75,7 +75,7 @@ resource "aws_guardduty_detector_feature" "security" {
 # every current and future account gets foundational detection and none of the paid plans
 resource "aws_guardduty_organization_configuration" "this" {
   detector_id                      = aws_guardduty_detector.security.id
-  auto_enable_organization_members = "ALL"
+  auto_enable_organization_members = var.teardown ? "NONE" : "ALL"
 }
 
 # auto-enable only reached new accounts, so the existing ones are enrolled explicitly
@@ -137,11 +137,16 @@ resource "aws_securityhub_configuration_policy" "baseline" {
   description = "fsbp, cis 3.0 and nist 800-53 rev5 in every account"
 
   configuration_policy {
-    service_enabled       = var.securityhub_enabled
-    enabled_standard_arns = local.securityhub_standards
+    service_enabled       = !var.teardown
+    enabled_standard_arns = var.teardown ? [] : local.securityhub_standards
 
-    security_controls_configuration {
-      disabled_control_identifiers = sort(keys(local.securityhub_disabled_controls))
+    # aws only takes standards and controls while the service is on
+    dynamic "security_controls_configuration" {
+      for_each = var.teardown ? [] : [1]
+
+      content {
+        disabled_control_identifiers = sort(keys(local.securityhub_disabled_controls))
+      }
     }
   }
 
